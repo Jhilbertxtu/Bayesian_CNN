@@ -141,10 +141,10 @@ class BBBConv2d(_ConvNd):
             conv_qw_mean.cuda()
             conv_qw_var.cuda()
         # sample from output
-        conv_qw = conv_qw_mean + conv_qw_var * (torch.randn(conv_qw_mean.size()))
-        print('mean', type(conv_qw_mean))
-        print('var', type(conv_qw_var))
-        print('conv_qw', type(conv_qw))
+        if cuda:
+            conv_qw = conv_qw_mean + conv_qw_var * (torch.randn(conv_qw_mean.size())).cuda()
+        else:
+            conv_qw = conv_qw_mean + conv_qw_var * (torch.randn(conv_qw_mean.size()))
 
         if cuda:
             conv_qw.cuda()

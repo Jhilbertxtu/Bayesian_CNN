@@ -153,9 +153,7 @@ def run_epoch(loader, epoch, is_training=False):
             optimiser.step()
 
         _, predicted = logits.max(1)
-        print('predicted', predicted)
         accuracy = (predicted.data.cpu() == y.cpu()).float().mean()
-        print('accuracy', accuracy)
 
         accuracies.append(accuracy)
         losses.append(loss.data.mean())
