@@ -6,7 +6,7 @@ import torch.utils.data as data
 import torchvision.datasets as dsets
 import os
 from utils.BBBConvmodel import BBBCNN
-from utils.BBBConvlayer import GaussianVariationalInference
+from utils.BBBlayers import GaussianVariationalInference
 
 cuda = torch.cuda.is_available()
 
@@ -18,7 +18,7 @@ is_training = True  # set to "False" for evaluation of network ability to rememb
 pretrained = False  # change pretrained to "True" for continual learning
 task_num = 10  # number of tasks, i.e. possible output classes
 num_samples = 10  # because of Casper's trick
-batch_size = 64
+batch_size = 2
 beta_type = "Blundell"
 num_epochs = 100
 p_logvar_init = 0

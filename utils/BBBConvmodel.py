@@ -1,7 +1,6 @@
 import torch.nn as nn
 from .BBBdistributions import Normal
-from .BBBConvlayer import BBBConv2d
-import torch.nn.init as init
+from .BBBlayers import BBBConv2d, BBBLinearFactorial
 
 
 class BBBCNN(nn.Module):
@@ -39,30 +38,31 @@ class BBBCNN(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
         # CLASSIFIER
-        self.classifier = nn.Sequential(
-            nn.Dropout(),
-            nn.Linear(256 * 6 * 6, 4096),
-            nn.ReLU(inplace=True),
-            nn.Dropout(),
-            nn.Linear(4096, 4096),
-            nn.ReLU(inplace=True),
-            nn.Linear(4096, num_tasks)
-        )
+        self.drop1 = nn.Dropout()
+        self.fc1 = BBBLinearFactorial(256 * 6 * 6, 4096)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.drop2 = nn.Dropout()
+        self.fc2 = BBBLinearFactorial(4096, 4096)
+        self.relu2 = nn.ReLU(inplace=True)
+        self.fc3 = BBBLinearFactorial(4096, num_tasks)
 
         layers = [self.conv1, self.conv1a, self.conv2, self.conv2a, self.conv3, self.conv3a, self.conv4, self.conv4a,
-                  self.conv5, self.conv5a, self.classifier]
+                  self.conv5, self.conv5a, self.drop1, self.fc1, self.relu1, self.drop2, self.fc2, self.relu2, self.fc3]
 
         self.layers = nn.ModuleList(layers)
 
     def probforward(self, x):
         kl = 0
         for layer in self.layers:
-            if hasattr(layer, 'probforward') and callable(layer.probforward):
-                x, _kl, = layer.probforward(x)
+            if hasattr(layer, 'convprobforward') and callable(layer.convprobforward):
+                x, _kl, = layer.convprobforward(x)
                 kl += _kl
-            elif layer is self.classifier:
+
+            elif hasattr(layer, 'fcprobforward') and callable(layer.fcprobforward):
+                print('x', x.size())
                 x = x.view(-1, 256 * 6 * 6)
-                x = layer(x)
+                x, _kl, = layer.fcprobforward(x)
+                kl += _kl
             else:
                 x = layer(x)
         logits = x
@@ -74,5 +74,11 @@ class BBBCNN(nn.Module):
             if type(layer) is BBBConv2d:
                 layer.pw = Normal(mu=d_q["layers.{}.qw_mean".format(i)],
                                   logvar=d_q["layers.{}.qw_logvar".format(i)])
+                # layer.pb = Normal(mu=d_q["layers.{}.qb_mean".format(i)], logvar=d_q["layers.{}.qb_logvar".format(i)])
 
-                #layer.pb = Normal(mu=d_q["layers.{}.qb_mean".format(i)], logvar=d_q["layers.{}.qb_logvar".format(i)])
+            elif type(layer) is BBBLinearFactorial:
+                layer.pw = Normal(mu=(d_q["layers.{}.qw_mean".format(i)]),
+                                  logvar=(d_q["layers.{}.qw_logvar".format(i)]))
+
+                layer.pb = Normal(mu=(d_q["layers.{}.qb_mean".format(i)]),
+                                  logvar=(d_q["layers.{}.qb_logvar".format(i)]))

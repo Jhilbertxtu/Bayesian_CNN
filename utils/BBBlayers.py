@@ -45,12 +45,12 @@ class _ConvNd(nn.Module):
 
         # ...and output...
         self.conv_qw_mean = Parameter(torch.Tensor(out_channels, in_channels // groups, *kernel_size))
-        self.conv_qw_var = Parameter(torch.Tensor(out_channels, in_channels // groups, *kernel_size))
+        self.conv_qw_logvar = Parameter(torch.Tensor(out_channels, in_channels // groups, *kernel_size))
 
         # ...as normal distributions
         self.qw = Normal(mu=self.qw_mean, logvar=self.qw_logvar)
         # self.qb = Normal(mu=self.qb_mean, logvar=self.qb_logvar)
-        self.conv_qw = Normal(mu=self.conv_qw_mean, logvar=self.conv_qw_var)
+        self.conv_qw = Normal(mu=self.conv_qw_mean, logvar=self.conv_qw_logvar)
 
         # initialise
 
@@ -67,13 +67,13 @@ class _ConvNd(nn.Module):
         n = self.in_channels
         for k in self.kernel_size:
             n *= k
-        stdv = 1. / math.sqrt(n)
+        stdv = 10. / math.sqrt(n)
         self.qw_mean.data.uniform_(-stdv, stdv)
         self.qw_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
         #self.qb_mean.data.uniform_(-stdv, stdv)
         #self.qb_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
         self.conv_qw_mean.data.uniform_(-stdv, stdv)
-        self.conv_qw_var.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
+        self.conv_qw_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
 
     def extra_repr(self):
         s = ('{in_channels}, {out_channels}, kernel_size={kernel_size}'
@@ -103,7 +103,7 @@ class BBBConv2d(_ConvNd):
         super(BBBConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, _pair(0), groups)
 
     """
-    # work on that
+    # must be implemented for numerical stability?
     def clip(mtx, to=8):
         print('mtx')
         print(type(mtx))
@@ -120,7 +120,7 @@ class BBBConv2d(_ConvNd):
     def forward(self, input):
         raise NotImplementedError()
 
-    def probforward(self, input):
+    def convprobforward(self, input):
         """
         Convolutional probabilistic forwarding method.
         :param input: data tensor
@@ -134,30 +134,121 @@ class BBBConv2d(_ConvNd):
 
         conv_qw_mean = F.conv2d(input=input, weight=self.qw_mean, stride=self.stride, padding=self.padding,
                                 dilation=self.dilation, groups=self.groups)
-        conv_qw_var = torch.sqrt(1e-8 + F.conv2d(input=input.pow(2), weight=torch.exp(log_alpha)*self.qw_mean.pow(2),
-                                                 stride=self.stride, padding=self.padding, dilation=self.dilation, groups=self.groups))
+        conv_qw_logvar = torch.sqrt(1e-8 + F.conv2d(input=input.pow(2), weight=torch.exp(log_alpha)*self.qw_mean.pow(2),
+                                                    stride=self.stride, padding=self.padding, dilation=self.dilation, groups=self.groups))
 
         if cuda:
             conv_qw_mean.cuda()
-            conv_qw_var.cuda()
+            conv_qw_logvar.cuda()
         # sample from output
         if cuda:
-            conv_qw = conv_qw_mean + conv_qw_var * (torch.randn(conv_qw_mean.size())).cuda()
+            output = conv_qw_mean + conv_qw_logvar * (torch.randn(conv_qw_mean.size())).cuda()
         else:
-            conv_qw = conv_qw_mean + conv_qw_var * (torch.randn(conv_qw_mean.size()))
+            output = conv_qw_mean + conv_qw_logvar * (torch.randn(conv_qw_mean.size()))
 
         if cuda:
-            conv_qw.cuda()
+            output.cuda()
 
         w_sample = self.conv_qw.sample()
 
         # KL divergence
-        #qw_logpdf = self.qw.logpdf(w_sample)
         qw_logpdf = self.conv_qw.logpdf(w_sample)
 
         kl = torch.sum(qw_logpdf - self.pw.logpdf(w_sample))
 
-        return conv_qw, kl
+        return output, kl
+
+
+class BBBLinearFactorial(nn.Module):
+    """
+    Describes a Linear fully connected Bayesian layer with
+    a distribution over each of the weights and biases
+    in the layer.
+    """
+    def __init__(self, in_features, out_features, p_logvar_init=-3, p_pi=1.0, q_logvar_init=-5):
+        # p_logvar_init, p_pi can be either
+        # (list/tuples): prior model is a mixture of Gaussians components=len(p_pi)=len(p_logvar_init)
+        # float: Gussian distribution
+        # q_logvar_init: float, the approximate posterior is currently always a factorized gaussian
+        super(BBBLinearFactorial, self).__init__()
+
+        self.in_features   = in_features
+        self.out_features  = out_features
+        self.p_logvar_init = p_logvar_init
+        self.q_logvar_init = q_logvar_init
+
+        # Approximate posterior weights...
+        self.qw_mean = Parameter(torch.Tensor(out_features, in_features))
+        self.qw_logvar = Parameter(torch.Tensor(out_features, in_features))
+        #self.qb_mean = Parameter(torch.Tensor(out_features))
+        #self.qb_logvar = Parameter(torch.Tensor(out_features))
+
+        # ...and output...
+        self.fc_qw_mean = Parameter(torch.Tensor(out_features, in_features))
+        self.fc_qw_logvar = Parameter(torch.Tensor(out_features, in_features))
+
+        # ...as normal distributions
+        self.qw = Normal(mu=self.qw_mean, logvar=self.qw_logvar)
+        #self.qb = Normal(mu=self.qb_mean, logvar=self.qb_logvar)
+        self.fc_qw = Normal(mu=self.fc_qw_mean, logvar=self.fc_qw_logvar)
+
+        # prior model
+        self.pw = distribution_selector(mu=0.0, logvar=p_logvar_init, pi=p_pi)
+        #self.pb = distribution_selector(mu=0.0, logvar=p_logvar_init, pi=p_pi)
+
+        # initialize all paramaters
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        # initialize (learnable) approximate posterior parameters
+        stdv = 10. / math.sqrt(self.in_features)
+        self.qw_mean.data.uniform_(-stdv, stdv)
+        self.qw_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
+        #self.qb_mean.data.uniform_(-stdv, stdv)
+        #self.qb_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
+        self.fc_qw_mean.data.uniform_(-stdv, stdv)
+        self.fc_qw_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
+
+    def forward(self, input):
+        raise NotImplementedError()
+
+    def fcprobforward(self, input):
+        """
+        Probabilistic forwarding method.
+        :param input: data tensor
+        :param MAP: boolean whether to take the MAP estimate.
+        :return: output, kl-divergence
+        """
+        log_alpha = self.qw_logvar - torch.log(self.qw_mean.pow(2) + 1e-8)
+
+        fc_qw_mean = F.linear(input=input, weight=self.qw_mean)
+        fc_qw_var = torch.sqrt(1e-8 + F.linear(input=input.pow(2), weight=torch.exp(log_alpha)*self.qw_mean.pow(2)))
+
+        if cuda:
+            fc_qw_mean.cuda()
+            fc_qw_var.cuda()
+        # sample from output
+        if cuda:
+            output = fc_qw_mean + fc_qw_var * (torch.randn(fc_qw_mean.size())).cuda()
+        else:
+            output = fc_qw_mean + fc_qw_var * (torch.randn(fc_qw_mean.size()))
+
+        if cuda:
+            output.cuda()
+
+        w_sample = self.fc_qw.sample()
+
+        # KL divergence
+        qw_logpdf = self.fc_qw.logpdf(w_sample)
+
+        kl = torch.sum(qw_logpdf - self.pw.logpdf(w_sample))
+
+        return output, kl
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+               + str(self.in_features) + ' -> ' \
+               + str(self.out_features) + ')'
 
 
 class GaussianVariationalInference(nn.Module):
