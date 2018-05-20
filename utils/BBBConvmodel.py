@@ -58,9 +58,11 @@ class BBBCNN(nn.Module):
                 x, _kl, = layer.convprobforward(x)
                 kl += _kl
 
-            elif hasattr(layer, 'fcprobforward') and callable(layer.fcprobforward):
-                print('x', x.size())
+            elif layer is self.drop1:
                 x = x.view(-1, 256 * 6 * 6)
+                x = layer(x)
+
+            elif hasattr(layer, 'fcprobforward') and callable(layer.fcprobforward):
                 x, _kl, = layer.fcprobforward(x)
                 kl += _kl
             else:
