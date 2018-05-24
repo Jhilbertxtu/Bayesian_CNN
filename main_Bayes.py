@@ -18,7 +18,7 @@ is_training = True  # set to "False" for evaluation of network ability to rememb
 pretrained = False  # change pretrained to "True" for continual learning
 task_num = 10  # number of tasks, i.e. possible output classes
 num_samples = 10  # because of Casper's trick
-batch_size = 64
+batch_size = 32
 beta_type = "Blundell"
 num_epochs = 100
 p_logvar_init = 0
@@ -31,25 +31,6 @@ weight_decay = 0.0005
 LOADING DATASET
 '''
 
-#train_root = '/home/felix/PycharmProjects/MasterProject/data/train/{}'.format(task_num)
-#train_root = '/home/felix/PycharmProjects/MasterProject/data/tiny-imagenet-200/train'
-#val_root = '/home/felix/PycharmProjects/MasterProject/data/val/{}'.format(task_num)
-#val_root = '/home/felix/PycharmProjects/MasterProject/data/tiny-imagenet-200/val'
-"""
-train_dataset = dsets.ImageFolder(root=train_root,
-                                  transform=transforms.Compose([
-                                      #transforms.RandomVerticalFlip(),
-                                      transforms.Resize((227, 227)),
-                                      transforms.ToTensor(),
-                                      transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))]))
-
-val_dataset = dsets.ImageFolder(root=val_root,
-                                transform=transforms.Compose([
-                                    transforms.Resize((227, 227)),
-                                    transforms.ToTensor(),
-                                    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))]))
-
-"""
 transform = transforms.Compose([transforms.Resize((227, 227)), transforms.ToTensor(),
                                 transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
 
@@ -168,6 +149,15 @@ def run_epoch(loader, epoch, is_training=False):
     return diagnostics
 
 
+'''
+SAVE MODEL
+'''
+
+logfile = os.path.join('diagnostics.txt')
+with open(logfile, "w") as lf:
+    lf.write("")
+
+
 for epoch in range(num_epochs):
     if is_training is True:
         diagnostics_train = run_epoch(loader_train, epoch, is_training=True)
@@ -176,10 +166,17 @@ for epoch in range(num_epochs):
         diagnostics_val = dict({"type": "validation", "epoch": epoch}, **diagnostics_val)
         print(diagnostics_train)
         print(diagnostics_val)
+
+        with open(logfile, 'a') as lf:
+            lf.write(str(diagnostics_train))
+            lf.write(str(diagnostics_val))
     else:
         diagnostics_val = run_epoch(loader_val, epoch)
         diagnostics_val = dict({"type": "validation", "epoch": epoch}, **diagnostics_val)
         print(diagnostics_val)
+
+        with open(logfile, 'a') as lf:
+            lf.write(str(diagnostics_val))
 
 
 if save_model is True:
