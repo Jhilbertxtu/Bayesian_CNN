@@ -1,6 +1,6 @@
 import torch.nn as nn
 from .BBBdistributions import Normal
-from .BBBlayers import BBBConv2d, BBBLinearFactorial
+from .BBBlayers import BBBConv2d, BBBLinearFactorial, FlattenLayer
 
 
 class BBBCNN(nn.Module):
@@ -38,6 +38,7 @@ class BBBCNN(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
         # CLASSIFIER
+        self.flatten = FlattenLayer(256 * 6 * 6)
         self.drop1 = nn.Dropout()
         self.fc1 = BBBLinearFactorial(256 * 6 * 6, 4096)
         self.relu1 = nn.ReLU(inplace=True)
@@ -47,7 +48,7 @@ class BBBCNN(nn.Module):
         self.fc3 = BBBLinearFactorial(4096, num_tasks)
 
         layers = [self.conv1, self.conv1a, self.conv2, self.conv2a, self.conv3, self.conv3a, self.conv4, self.conv4a,
-                  self.conv5, self.conv5a, self.drop1, self.fc1, self.relu1, self.drop2, self.fc2, self.relu2, self.fc3]
+                  self.conv5, self.conv5a, self.flatten, self.drop1, self.fc1, self.relu1, self.drop2, self.fc2, self.relu2, self.fc3]
 
         self.layers = nn.ModuleList(layers)
 
@@ -58,16 +59,13 @@ class BBBCNN(nn.Module):
                 x, _kl, = layer.convprobforward(x)
                 kl += _kl
 
-            elif layer is self.drop1:
-                x = x.view(-1, 256 * 6 * 6)
-                x = layer(x)
-
             elif hasattr(layer, 'fcprobforward') and callable(layer.fcprobforward):
                 x, _kl, = layer.fcprobforward(x)
                 kl += _kl
             else:
                 x = layer(x)
         logits = x
+        print('logits', logits)
         return logits, kl
 
     def load_prior(self, state_dict):

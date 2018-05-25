@@ -9,6 +9,16 @@ from torch.nn.modules.utils import _pair
 cuda = torch.cuda.is_available()
 
 
+class FlattenLayer(nn.Module):
+
+    def __init__(self, num_features):
+        super(FlattenLayer, self).__init__()
+        self.num_features = num_features
+
+    def forward(self, x):
+        return x.view(-1, self.num_features)
+
+
 class _ConvNd(nn.Module):
     """
     Describes a Bayesian convolutional layer with
@@ -53,6 +63,7 @@ class _ConvNd(nn.Module):
         self.conv_qw = Normal(mu=self.conv_qw_mean, logvar=self.conv_qw_logvar)
 
         # initialise
+        self.log_alpha = Parameter(torch.Tensor(1, 1))
 
         # prior model
         # (does not have any trainable parameters so we use fixed normal or fixed mixture normal distributions)
@@ -67,13 +78,14 @@ class _ConvNd(nn.Module):
         n = self.in_channels
         for k in self.kernel_size:
             n *= k
-        stdv = 10. / math.sqrt(n)
+        stdv = 1. / math.sqrt(n)
         self.qw_mean.data.uniform_(-stdv, stdv)
         self.qw_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
         #self.qb_mean.data.uniform_(-stdv, stdv)
         #self.qb_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
         self.conv_qw_mean.data.uniform_(-stdv, stdv)
         self.conv_qw_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
+        self.log_alpha.data.fill_(-5.0)
 
     def extra_repr(self):
         s = ('{in_channels}, {out_channels}, kernel_size={kernel_size}'
@@ -102,21 +114,6 @@ class BBBConv2d(_ConvNd):
 
         super(BBBConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, _pair(0), groups)
 
-    """
-    # must be implemented for numerical stability?
-    def clip(mtx, to=8):
-        print('mtx')
-        print(type(mtx))
-        #print(torch.Size(mtx))
-        a = torch.le(mtx, -to)
-        #print(type(a))
-        #print(a)
-        mtx = np.where(torch.le(mtx, -to), -to, mtx)
-        #print(type(mtx))
-        mtx = np.where(torch.ge(mtx.Tensor, to), to, mtx.Tensor)
-        return mtx
-    """
-
     def forward(self, input):
         raise NotImplementedError()
 
@@ -128,13 +125,13 @@ class BBBConv2d(_ConvNd):
         """
 
         # local reparameterization trick for convolutional layer
-        # self.clip in front of self.qw_logvar
         # the inverse of alpha is variance, alpha is precision
-        log_alpha = self.qw_logvar - torch.log(self.qw_mean.pow(2) + 1e-8)
+
+        # log_alpha = self.qw_logvar - torch.log(self.qw_mean.pow(2) + 1e-8)
 
         conv_qw_mean = F.conv2d(input=input, weight=self.qw_mean, stride=self.stride, padding=self.padding,
                                 dilation=self.dilation, groups=self.groups)
-        conv_qw_logvar = torch.sqrt(1e-8 + F.conv2d(input=input.pow(2), weight=torch.exp(log_alpha)*self.qw_mean.pow(2),
+        conv_qw_logvar = torch.sqrt(1e-8 + F.conv2d(input=input.pow(2), weight=torch.exp(self.log_alpha)*self.qw_mean.pow(2),
                                                     stride=self.stride, padding=self.padding, dilation=self.dilation, groups=self.groups))
 
         if cuda:
@@ -192,6 +189,9 @@ class BBBLinearFactorial(nn.Module):
         #self.qb = Normal(mu=self.qb_mean, logvar=self.qb_logvar)
         self.fc_qw = Normal(mu=self.fc_qw_mean, logvar=self.fc_qw_logvar)
 
+        # initialise
+        self.log_alpha = Parameter(torch.Tensor(1, 1))
+
         # prior model
         self.pw = distribution_selector(mu=0.0, logvar=p_logvar_init, pi=p_pi)
         #self.pb = distribution_selector(mu=0.0, logvar=p_logvar_init, pi=p_pi)
@@ -208,6 +208,7 @@ class BBBLinearFactorial(nn.Module):
         #self.qb_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
         self.fc_qw_mean.data.uniform_(-stdv, stdv)
         self.fc_qw_logvar.data.uniform_(-stdv, stdv).add_(self.q_logvar_init)
+        self.log_alpha.data.uniform_(-stdv, stdv)
 
     def forward(self, input):
         raise NotImplementedError()
@@ -219,10 +220,10 @@ class BBBLinearFactorial(nn.Module):
         :param MAP: boolean whether to take the MAP estimate.
         :return: output, kl-divergence
         """
-        log_alpha = self.qw_logvar - torch.log(self.qw_mean.pow(2) + 1e-8)
+        #log_alpha = self.qw_logvar - torch.log(self.qw_mean.pow(2) + 1e-8)
 
         fc_qw_mean = F.linear(input=input, weight=self.qw_mean)
-        fc_qw_var = torch.sqrt(1e-8 + F.linear(input=input.pow(2), weight=torch.exp(log_alpha)*self.qw_mean.pow(2)))
+        fc_qw_var = torch.sqrt(1e-8 + F.linear(input=input.pow(2), weight=torch.exp(self.log_alpha)*self.qw_mean.pow(2)))
 
         if cuda:
             fc_qw_mean.cuda()
