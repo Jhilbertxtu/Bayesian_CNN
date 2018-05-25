@@ -94,8 +94,8 @@ TRAIN MODEL
 '''
 
 logfile = os.path.join('diagnostics.txt')
-with open(logfile, "w") as fh:
-    fh.write("")
+with open(logfile, "w") as lf:
+    lf.write("")
 
 
 def run_epoch(loader, epoch, is_training=False):
@@ -149,15 +149,6 @@ def run_epoch(loader, epoch, is_training=False):
     return diagnostics
 
 
-'''
-SAVE MODEL
-'''
-
-logfile = os.path.join('diagnostics.txt')
-with open(logfile, "w") as lf:
-    lf.write("")
-
-
 for epoch in range(num_epochs):
     if is_training is True:
         diagnostics_train = run_epoch(loader_train, epoch, is_training=True)
@@ -167,7 +158,7 @@ for epoch in range(num_epochs):
         print(diagnostics_train)
         print(diagnostics_val)
 
-        with open(logfile, 'a') as lf:
+        with open(logfile, "a") as lf:
             lf.write(str(diagnostics_train))
             lf.write(str(diagnostics_val))
     else:
@@ -175,9 +166,12 @@ for epoch in range(num_epochs):
         diagnostics_val = dict({"type": "validation", "epoch": epoch}, **diagnostics_val)
         print(diagnostics_val)
 
-        with open(logfile, 'a') as lf:
+        with open(logfile, "a") as lf:
             lf.write(str(diagnostics_val))
 
+'''
+SAVE PARAMETERS
+'''
 
 if save_model is True:
     torch.save(model.state_dict(), "weights.pkl")
