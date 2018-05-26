@@ -70,7 +70,7 @@ def cnnmodel(pretrained):
 
     if pretrained:
         # load pretrained prior distribution of one class (e.g. cup)
-        with open("/home/adllo/PycharmProjects/FelixMaster/results/....pkl", "rb") as previous:
+        with open("~/weights.pkl", "rb") as previous:
             d = torch.load(previous)
             model.load_prior(d)
 
