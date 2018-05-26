@@ -47,8 +47,6 @@ if net is BBBLeNet:
 elif net is BBBAlexNet:
     train_dataset = dsets.CIFAR100(root="data", download=True, transform=transform)
     val_dataset = dsets.CIFAR100(root='data', download=True, train=False, transform=transform)
-else:
-    raise SystemExit
 
 '''
 MAKING DATASET ITERABLE
@@ -132,11 +130,11 @@ def run_epoch(loader, epoch, is_training=False):
             x = x.cuda()
             y = y.cuda()
 
-        if beta_type == "Blundell":
+        if beta_type is "Blundell":
             beta = 2 ** (m - (i + 1)) / (2 ** m - 1)
-        elif beta_type == "Soenderby":
+        elif beta_type is "Soenderby":
             beta = min(epoch / (num_epochs//4), 1)
-        elif beta_type == "Standard":
+        elif beta_type is "Standard":
             beta = 1 / m
         else:
             beta = 0

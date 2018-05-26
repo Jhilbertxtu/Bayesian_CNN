@@ -96,16 +96,16 @@ class BBBLeNet(nn.Module):
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.flatten = FlattenLayer(5 * 5 * 16)
-        self.dense1 = BBBLinearFactorial(5 * 5 * 16, 120)
+        self.fc1 = BBBLinearFactorial(5 * 5 * 16, 120)
         self.relu3 = nn.ReLU()
 
-        self.dense2 = BBBLinearFactorial(120, 84)
+        self.fc2 = BBBLinearFactorial(120, 84)
         self.relu4 = nn.ReLU()
 
-        self.dense3 = BBBLinearFactorial(84, num_tasks)
+        self.fc3 = BBBLinearFactorial(84, num_tasks)
 
         layers = [self.conv1, self.relu1, self.pool1, self.conv2, self.relu2, self.pool2,
-                  self.flatten, self.dense1, self.relu3, self.dense2, self.relu4, self.dense3]
+                  self.flatten, self.fc1, self.relu3, self.fc2, self.relu4, self.fc3]
 
         self.layers = nn.ModuleList(layers)
 
