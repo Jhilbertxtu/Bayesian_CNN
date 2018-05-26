@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 import torch.utils.data as data
 import torchvision.datasets as dsets
 import os
-from utils.BBBConvmodel import BBBCNN
+from utils.BBBConvmodel import BBBAlexNet, BBBLeNet
 from utils.BBBlayers import GaussianVariationalInference
 
 cuda = torch.cuda.is_available()
@@ -16,16 +16,21 @@ MODEL HYPERPARAMETERS
 save_model = True
 is_training = True  # set to "False" for evaluation of network ability to remember previous tasks
 pretrained = False  # change pretrained to "True" for continual learning
-task_num = 10  # number of tasks, i.e. possible output classes
 num_samples = 10  # because of Casper's trick
-batch_size = 32
+batch_size = 64
 beta_type = "Blundell"
+net = BBBLeNet   # LeNet or AlexNet
 num_epochs = 100
 p_logvar_init = 0
 q_logvar_init = -10
 lr = 1e-5
 weight_decay = 0.0005
 
+# number of tasks, i.e. possible output classes
+if net is BBBLeNet:    # train with MNIST
+    task_num = 10
+elif net is BBBAlexNet:    # train with CIFAR-100
+    task_num = 100
 
 '''
 LOADING DATASET
@@ -34,8 +39,16 @@ LOADING DATASET
 transform = transforms.Compose([transforms.Resize((227, 227)), transforms.ToTensor(),
                                 transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
 
-train_dataset = dsets.CIFAR10(root="data", download=True, transform=transform)
-val_dataset = dsets.CIFAR10(root='data', download=True, train=False, transform=transform)
+if net is BBBLeNet:
+    train_dataset = dsets.MNIST(root="data", download=True,
+                                transform=transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()]))
+    val_dataset = dsets.MNIST(root="data", download=True, train=False,
+                              transform=transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()]))
+elif net is BBBAlexNet:
+    train_dataset = dsets.CIFAR100(root="data", download=True, transform=transform)
+    val_dataset = dsets.CIFAR100(root='data', download=True, train=False, transform=transform)
+else:
+    raise SystemExit
 
 '''
 MAKING DATASET ITERABLE
@@ -53,7 +66,7 @@ loader_val = data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle
 
 # enable loading of weights to transfer learning
 def cnnmodel(pretrained):
-    model = BBBCNN(num_tasks=task_num)
+    model = net(num_tasks=task_num)
 
     if pretrained:
         # load pretrained prior distribution of one class (e.g. cup)
@@ -108,8 +121,12 @@ def run_epoch(loader, epoch, is_training=False):
 
     for i, (images, labels) in enumerate(loader):
         # Repeat samples (Casper's trick)
-        x = images.view(batch_size, 3, 227, 227).repeat(num_samples, 1, 1, 1)
-        y = labels.repeat(num_samples)
+        if net is BBBAlexNet:
+            x = images.view(batch_size, 3, 227, 227).repeat(num_samples, 1, 1, 1)
+            y = labels.repeat(num_samples)
+        elif net is BBBLeNet:
+            x = images.view(batch_size, 1, 32, 32).repeat(num_samples, 1, 1, 1)
+            y = labels.repeat(num_samples)
 
         if cuda:
             x = x.cuda()

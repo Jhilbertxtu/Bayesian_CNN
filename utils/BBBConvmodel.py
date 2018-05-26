@@ -3,10 +3,10 @@ from .BBBdistributions import Normal
 from .BBBlayers import BBBConv2d, BBBLinearFactorial, FlattenLayer
 
 
-class BBBCNN(nn.Module):
+class BBBAlexNet(nn.Module):
     def __init__(self, num_tasks):
         # create AlexNet with probabilistic weights
-        super(BBBCNN, self).__init__()
+        super(BBBAlexNet, self).__init__()
 
         # FEATURES
         self.conv1 = BBBConv2d(3, 64, kernel_size=11, stride=4, padding=2)
@@ -49,6 +49,63 @@ class BBBCNN(nn.Module):
 
         layers = [self.conv1, self.conv1a, self.conv2, self.conv2a, self.conv3, self.conv3a, self.conv4, self.conv4a,
                   self.conv5, self.conv5a, self.flatten, self.drop1, self.fc1, self.relu1, self.drop2, self.fc2, self.relu2, self.fc3]
+
+        self.layers = nn.ModuleList(layers)
+
+    def probforward(self, x):
+        kl = 0
+        for layer in self.layers:
+            if hasattr(layer, 'convprobforward') and callable(layer.convprobforward):
+                x, _kl, = layer.convprobforward(x)
+                kl += _kl
+
+            elif hasattr(layer, 'fcprobforward') and callable(layer.fcprobforward):
+                x, _kl, = layer.fcprobforward(x)
+                kl += _kl
+            else:
+                x = layer(x)
+        logits = x
+        print('logits', logits)
+        return logits, kl
+
+    def load_prior(self, state_dict):
+        d_q = {k: v for k, v in state_dict.items() if "q" in k}
+        for i, layer in enumerate(self.layers):
+            if type(layer) is BBBConv2d:
+                layer.pw = Normal(mu=d_q["layers.{}.qw_mean".format(i)],
+                                  logvar=d_q["layers.{}.qw_logvar".format(i)])
+                # layer.pb = Normal(mu=d_q["layers.{}.qb_mean".format(i)], logvar=d_q["layers.{}.qb_logvar".format(i)])
+
+            elif type(layer) is BBBLinearFactorial:
+                layer.pw = Normal(mu=(d_q["layers.{}.qw_mean".format(i)]),
+                                  logvar=(d_q["layers.{}.qw_logvar".format(i)]))
+
+                layer.pb = Normal(mu=(d_q["layers.{}.qb_mean".format(i)]),
+                                  logvar=(d_q["layers.{}.qb_logvar".format(i)]))
+
+
+class BBBLeNet(nn.Module):
+    def __init__(self, num_tasks):
+        super(BBBLeNet, self).__init__()
+        self.conv1 = BBBConv2d(1, 6, 5, stride=1)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.conv2 = BBBConv2d(6, 16, 5, stride=1)
+        self.relu2 = nn.ReLU(inplace=True)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.flatten = FlattenLayer(5 * 5 * 16)
+        self.dense1 = BBBLinearFactorial(5 * 5 * 16, 120)
+        self.relu3 = nn.ReLU()
+
+        self.dense2 = BBBLinearFactorial(120, 84)
+        self.relu4 = nn.ReLU()
+
+        self.dense3 = BBBLinearFactorial(84, num_tasks)
+
+        layers = [self.conv1, self.relu1, self.pool1, self.conv2, self.relu2, self.pool2,
+                  self.flatten, self.dense1, self.relu3, self.dense2, self.relu4, self.dense3]
 
         self.layers = nn.ModuleList(layers)
 
