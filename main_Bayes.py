@@ -120,10 +120,10 @@ def run_epoch(loader, epoch, is_training=False):
     for i, (images, labels) in enumerate(loader):
         # Repeat samples (Casper's trick)
         if net is BBBAlexNet:
-            x = images.view(batch_size, 3, 227, 227).repeat(num_samples, 1, 1, 1)
+            x = images.view(-1, 3, 227, 227).repeat(num_samples, 1, 1, 1)
             y = labels.repeat(num_samples)
         elif net is BBBLeNet:
-            x = images.view(batch_size, 1, 32, 32).repeat(num_samples, 1, 1, 1)
+            x = images.view(-1, 1, 32, 32).repeat(num_samples, 1, 1, 1)
             y = labels.repeat(num_samples)
 
         if cuda:
