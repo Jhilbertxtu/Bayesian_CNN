@@ -128,7 +128,7 @@ class BBBConv2d(_ConvNd):
         # local reparameterization trick for convolutional layer
         conv_qw_mean = F.conv2d(input=input, weight=self.qw_mean, stride=self.stride, padding=self.padding,
                                 dilation=self.dilation, groups=self.groups)
-        conv_qw_logvar = torch.sqrt(1e-8 + F.conv2d(input=input.pow(2), weight=torch.exp(self.log_alpha)*self.qw_mean.pow(2),
+        conv_qw_logvar = torch.sqrt(1e-8 + F.conv2d(input=input.pow(2), weight=self.log_alpha*self.qw_mean.pow(2),
                                                     stride=self.stride, padding=self.padding, dilation=self.dilation, groups=self.groups))
 
         if cuda:
@@ -220,17 +220,17 @@ class BBBLinearFactorial(nn.Module):
         """
 
         fc_qw_mean = F.linear(input=input, weight=self.qw_mean)
-        fc_qw_var = torch.sqrt(1e-8 + F.linear(input=input.pow(2), weight=torch.exp(self.log_alpha)*self.qw_mean.pow(2)))
+        fc_qw_logvar = torch.sqrt(1e-8 + F.linear(input=input.pow(2), weight=self.log_alpha*self.qw_mean.pow(2)))
 
         if cuda:
             fc_qw_mean.cuda()
-            fc_qw_var.cuda()
+            fc_qw_logvar.cuda()
 
         # sample from output
         if cuda:
-            output = fc_qw_mean + fc_qw_var * (torch.randn(fc_qw_mean.size())).cuda()
+            output = fc_qw_mean + fc_qw_logvar * (torch.randn(fc_qw_mean.size())).cuda()
         else:
-            output = fc_qw_mean + fc_qw_var * (torch.randn(fc_qw_mean.size()))
+            output = fc_qw_mean + fc_qw_logvar * (torch.randn(fc_qw_mean.size()))
 
         if cuda:
             output.cuda()
