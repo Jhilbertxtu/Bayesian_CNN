@@ -32,17 +32,22 @@ if dataset is 'MNIST':    # train with MNIST
 elif dataset is 'CIFAR-100':    # train with CIFAR-100
     outputs = 100
 
+if net is BBBLeNet:
+    resize = 32
+elif net is BBBAlexNet:
+    resize = 227
+
 '''
 LOADING DATASET
 '''
 
 if dataset is 'MNIST':
-    transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()])
+    transform = transforms.Compose([transforms.Resize((resize, resize)), transforms.ToTensor()])
     train_dataset = dsets.MNIST(root="data", download=True, transform=transform)
     val_dataset = dsets.MNIST(root="data", download=True, train=False, transform=transform)
 
 elif dataset is 'CIFAR-100':
-    transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(),
+    transform = transforms.Compose([transforms.Resize((resize, resize)), transforms.ToTensor(),
                                     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
     train_dataset = dsets.CIFAR100(root="data", download=True, transform=transform)
     val_dataset = dsets.CIFAR100(root='data', download=True, train=False, transform=transform)
