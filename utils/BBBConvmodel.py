@@ -85,9 +85,12 @@ class BBBAlexNet(nn.Module):
 
 
 class BBBLeNet(nn.Module):
-    def __init__(self, outputs):
+    def __init__(self, outputs, dataset):
         super(BBBLeNet, self).__init__()
-        self.conv1 = BBBConv2d(1, 6, 5, stride=1)
+        if dataset is 'MNIST':
+            self.conv1 = BBBConv2d(1, 6, 5, stride=1)
+        elif dataset is 'CIFAR-100':
+            self.conv1 = BBBConv2d(3, 6, 5, stride=1)
         self.relu1 = nn.ReLU(inplace=True)
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 

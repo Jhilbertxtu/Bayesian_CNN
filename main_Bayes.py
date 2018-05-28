@@ -19,6 +19,7 @@ num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
 net = BBBLeNet   # LeNet or AlexNet
+dataset = 'MNIST'  # MNIST or CIFAR-100
 num_epochs = 100
 p_logvar_init = 0
 q_logvar_init = -10
@@ -35,13 +36,13 @@ elif net is BBBAlexNet:    # train with CIFAR-100
 LOADING DATASET
 '''
 
-if net is BBBLeNet:
+if dataset is 'MNIST':
     transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()])
     train_dataset = dsets.MNIST(root="data", download=True, transform=transform)
     val_dataset = dsets.MNIST(root="data", download=True, train=False, transform=transform)
 
-elif net is BBBAlexNet:
-    transform = transforms.Compose([transforms.Resize((227, 227)), transforms.ToTensor(),
+elif dataset is 'CIFAR-100':
+    transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(),
                                     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
     train_dataset = dsets.CIFAR100(root="data", download=True, transform=transform)
     val_dataset = dsets.CIFAR100(root='data', download=True, train=False, transform=transform)
