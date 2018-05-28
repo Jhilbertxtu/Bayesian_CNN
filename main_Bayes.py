@@ -23,7 +23,7 @@ num_epochs = 100
 p_logvar_init = 0
 q_logvar_init = -10
 lr = 1e-5
-weight_decay = 0.0005
+weight_decay = 0
 
 # number of possible output classes
 if net is BBBLeNet:    # train with MNIST
@@ -36,8 +36,7 @@ LOADING DATASET
 '''
 
 if net is BBBLeNet:
-    transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(),
-                                    transforms.Normalize((0.1307,), (0.3081,))])
+    transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()])
     train_dataset = dsets.MNIST(root="data", download=True, transform=transform)
     val_dataset = dsets.MNIST(root="data", download=True, train=False, transform=transform)
 
