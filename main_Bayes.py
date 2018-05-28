@@ -175,5 +175,5 @@ SAVE PARAMETERS
 '''
 
 if save_model is True:
-    torch.save(model.state_dict(), "weights_0.pkl")
+    torch.save(model.state_dict(), "weights_1.pkl")
 
