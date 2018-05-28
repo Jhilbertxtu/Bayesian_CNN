@@ -14,7 +14,7 @@ cuda = torch.cuda.is_available()
 HYPERPARAMETERS
 '''
 save_model = True
-is_training = True  # set to "False" for evaluation of network ability to remember previous tasks
+is_training = True  # set to "False" to only run validation
 num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
@@ -25,7 +25,7 @@ q_logvar_init = -10
 lr = 1e-5
 weight_decay = 0
 
-# number of tasks, i.e. possible output classes
+# number of possible output classes
 if net is BBBLeNet:    # train with MNIST
     outputs = 10
 elif net is BBBAlexNet:    # train with CIFAR-100
@@ -38,10 +38,9 @@ LOADING DATASET
 if net is BBBLeNet:
     transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(),
                                     transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = dsets.MNIST(root="data", download=True,
-                                transform=transform)
-    val_dataset = dsets.MNIST(root="data", download=True, train=False,
-                              transform=transform)
+    train_dataset = dsets.MNIST(root="data", download=True, transform=transform)
+    val_dataset = dsets.MNIST(root="data", download=True, train=False, transform=transform)
+
 elif net is BBBAlexNet:
     transform = transforms.Compose([transforms.Resize((227, 227)), transforms.ToTensor(),
                                     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
