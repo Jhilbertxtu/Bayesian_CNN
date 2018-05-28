@@ -27,9 +27,9 @@ lr = 1e-5
 weight_decay = 0
 
 # number of possible output classes
-if net is BBBLeNet:    # train with MNIST
+if dataset is 'MNIST':    # train with MNIST
     outputs = 10
-elif net is BBBAlexNet:    # train with CIFAR-100
+elif dataset is 'CIFAR-100':    # train with CIFAR-100
     outputs = 100
 
 '''
