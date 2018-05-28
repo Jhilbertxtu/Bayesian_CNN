@@ -90,7 +90,7 @@ for i in range(len(list(model.parameters()))):
 TRAIN MODEL
 '''
 
-logfile = os.path.join('diagnostics.txt')
+logfile = os.path.join('diagnostics_1.txt')
 with open(logfile, 'w') as lf:
     lf.write('')
 
