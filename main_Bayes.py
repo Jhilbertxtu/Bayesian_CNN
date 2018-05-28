@@ -35,15 +35,16 @@ elif net is BBBAlexNet:    # train with CIFAR-100
 LOADING DATASET
 '''
 
-transform = transforms.Compose([transforms.Resize((227, 227)), transforms.ToTensor(),
-                                transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
-
 if net is BBBLeNet:
+    transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(),
+                                    transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = dsets.MNIST(root="data", download=True,
-                                transform=transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()]))
+                                transform=transform)
     val_dataset = dsets.MNIST(root="data", download=True, train=False,
-                              transform=transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()]))
+                              transform=transform)
 elif net is BBBAlexNet:
+    transform = transforms.Compose([transforms.Resize((227, 227)), transforms.ToTensor(),
+                                    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
     train_dataset = dsets.CIFAR100(root="data", download=True, transform=transform)
     val_dataset = dsets.CIFAR100(root='data', download=True, train=False, transform=transform)
 
