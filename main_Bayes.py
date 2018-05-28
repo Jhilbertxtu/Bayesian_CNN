@@ -23,7 +23,7 @@ dataset = 'MNIST'  # MNIST or CIFAR-100
 num_epochs = 100
 p_logvar_init = 0
 q_logvar_init = -10
-lr = 1e-5
+lr = 0.001
 weight_decay = 0
 
 # number of possible output classes
