@@ -11,11 +11,10 @@ from utils.BBBlayers import GaussianVariationalInference
 cuda = torch.cuda.is_available()
 
 '''
-MODEL HYPERPARAMETERS
+HYPERPARAMETERS
 '''
 save_model = True
 is_training = True  # set to "False" for evaluation of network ability to remember previous tasks
-pretrained = False  # change pretrained to "True" for continual learning
 num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
@@ -24,7 +23,7 @@ num_epochs = 100
 p_logvar_init = 0
 q_logvar_init = -10
 lr = 1e-5
-weight_decay = 0.0005
+weight_decay = 0
 
 # number of tasks, i.e. possible output classes
 if net is BBBLeNet:    # train with MNIST
@@ -62,24 +61,11 @@ loader_train = data.DataLoader(dataset=train_dataset, batch_size=batch_size, shu
 loader_val = data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False)
 
 
-# enable loading of weights to transfer learning
-def cnnmodel(pretrained):
-    model = net(num_tasks=task_num)
-
-    if pretrained:
-        # load pretrained prior distribution of one class (e.g. cup)
-        with open("~/weights.pkl", "rb") as previous:
-            d = torch.load(previous)
-            model.load_prior(d)
-
-    return model
-
-
 '''
 INSTANTIATE MODEL
 '''
 
-model = cnnmodel(pretrained=pretrained)
+model = net(num_tasks=task_num)
 
 if cuda:
     model.cuda()
