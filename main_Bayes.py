@@ -42,7 +42,8 @@ LOADING DATASET
 '''
 
 if dataset is 'MNIST':
-    transform = transforms.Compose([transforms.Resize((resize, resize)), transforms.ToTensor()])
+    transform = transforms.Compose([transforms.Resize((resize, resize)), transforms.ToTensor(),
+                                    transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = dsets.MNIST(root="data", download=True, transform=transform)
     val_dataset = dsets.MNIST(root="data", download=True, train=False, transform=transform)
 
