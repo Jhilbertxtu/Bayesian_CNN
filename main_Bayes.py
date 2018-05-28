@@ -65,7 +65,7 @@ loader_val = data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle
 INSTANTIATE MODEL
 '''
 
-model = net(outputs=outputs)
+model = net(outputs=outputs, dataset=dataset)
 
 if cuda:
     model.cuda()
