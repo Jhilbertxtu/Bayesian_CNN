@@ -18,7 +18,7 @@ is_training = True  # set to "False" for evaluation of network ability to rememb
 num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
-net = BBBAlexNet   # LeNet or AlexNet
+net = BBBLeNet   # LeNet or AlexNet
 num_epochs = 100
 p_logvar_init = 0
 q_logvar_init = -10
@@ -27,9 +27,9 @@ weight_decay = 0
 
 # number of tasks, i.e. possible output classes
 if net is BBBLeNet:    # train with MNIST
-    task_num = 10
+    outputs = 10
 elif net is BBBAlexNet:    # train with CIFAR-100
-    task_num = 100
+    outputs = 100
 
 '''
 LOADING DATASET
@@ -65,7 +65,7 @@ loader_val = data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle
 INSTANTIATE MODEL
 '''
 
-model = net(num_tasks=task_num)
+model = net(outputs=outputs)
 
 if cuda:
     model.cuda()
@@ -175,5 +175,5 @@ SAVE PARAMETERS
 '''
 
 if save_model is True:
-    torch.save(model.state_dict(), "weights.pkl")
+    torch.save(model.state_dict(), "weights_0.pkl")
 
