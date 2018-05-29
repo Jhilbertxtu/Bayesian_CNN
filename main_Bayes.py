@@ -15,12 +15,12 @@ HYPERPARAMETERS
 '''
 save_model = True
 is_training = True  # set to "False" to only run validation
-num_samples = 1  # because of Casper's trick
-batch_size = 1
+num_samples = 10  # because of Casper's trick
+batch_size = 32
 beta_type = "Blundell"
 net = BBBAlexNet   # LeNet or AlexNet
 dataset = 'CIFAR-100'  # MNIST or CIFAR-100
-num_epochs = 100
+num_epochs = 200
 p_logvar_init = 0
 q_logvar_init = -10
 lr = 0.0005
