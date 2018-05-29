@@ -117,12 +117,8 @@ def run_epoch(loader, epoch, is_training=False):
             x = images.view(-1, 3, 227, 227).repeat(num_samples, 1, 1, 1)
             y = labels.repeat(num_samples)
         elif net is BBBLeNet:
-            if dataset is 'MNIST':
-                x = images.view(-1, 1, 32, 32).repeat(num_samples, 1, 1, 1)
-                y = labels.repeat(num_samples)
-            elif dataset is 'CIFAR-100':
-                x = images.view(-1, 3, 32, 32).repeat(num_samples, 1, 1, 1)
-                y = labels.repeat(num_samples)
+            x = images.view(-1, inputs, 32, 32).repeat(num_samples, 1, 1, 1)
+            y = labels.repeat(num_samples)
 
         if cuda:
             x = x.cuda()
