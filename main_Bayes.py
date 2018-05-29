@@ -19,11 +19,11 @@ num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
 net = BBBLeNet   # LeNet or AlexNet
-dataset = 'MNIST'  # MNIST or CIFAR-100
+dataset = 'CIFAR-100'  # MNIST or CIFAR-100
 num_epochs = 100
 p_logvar_init = 0
 q_logvar_init = -10
-lr = 0.005
+lr = 0.0005
 weight_decay = 0.0005
 
 # number of possible output classes
