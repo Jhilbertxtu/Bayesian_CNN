@@ -4,12 +4,12 @@ from .BBBlayers import BBBConv2d, BBBLinearFactorial, FlattenLayer
 
 
 class BBBAlexNet(nn.Module):
-    def __init__(self, outputs):
+    def __init__(self, outputs, inputs):
         # create AlexNet with probabilistic weights
         super(BBBAlexNet, self).__init__()
 
         # FEATURES
-        self.conv1 = BBBConv2d(3, 64, kernel_size=11, stride=4, padding=2)
+        self.conv1 = BBBConv2d(inputs, 64, kernel_size=11, stride=4, padding=2)
         self.conv1a = nn.Sequential(
             nn.Softplus(),
             # nn.BatchNorm2d(64),
