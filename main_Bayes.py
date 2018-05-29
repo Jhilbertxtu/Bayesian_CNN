@@ -26,11 +26,13 @@ q_logvar_init = -10
 lr = 0.0005
 weight_decay = 0.0005
 
-# number of possible output classes
+# dimensions of input and output
 if dataset is 'MNIST':    # train with MNIST
     outputs = 10
+    inputs = 1
 elif dataset is 'CIFAR-100':    # train with CIFAR-100
     outputs = 100
+    inputs = 3
 
 if net is BBBLeNet:
     resize = 32
@@ -71,7 +73,7 @@ loader_val = data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle
 INSTANTIATE MODEL
 '''
 
-model = net(outputs=outputs, dataset=dataset)
+model = net(outputs=outputs, inputs=inputs)
 
 if cuda:
     model.cuda()
@@ -115,8 +117,12 @@ def run_epoch(loader, epoch, is_training=False):
             x = images.view(-1, 3, 227, 227).repeat(num_samples, 1, 1, 1)
             y = labels.repeat(num_samples)
         elif net is BBBLeNet:
-            x = images.view(-1, 1, 32, 32).repeat(num_samples, 1, 1, 1)
-            y = labels.repeat(num_samples)
+            if dataset is 'MNIST':
+                x = images.view(-1, 1, 32, 32).repeat(num_samples, 1, 1, 1)
+                y = labels.repeat(num_samples)
+            elif dataset is 'CIFAR-100':
+                x = images.view(-1, 3, 32, 32).repeat(num_samples, 1, 1, 1)
+                y = labels.repeat(num_samples)
 
         if cuda:
             x = x.cuda()
