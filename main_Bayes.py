@@ -1,5 +1,6 @@
 import math
 import torch
+import pickle
 import torch.cuda
 import torchvision.transforms as transforms
 import torch.utils.data as data
@@ -183,5 +184,6 @@ SAVE PARAMETERS
 '''
 
 if save_model is True:
-    torch.save(model.state_dict(), "weights_1.pkl")
+    with open("weights_1.pkl", "wb") as wf:
+        pickle.dump(model.state_dict(), wf)
 
