@@ -124,17 +124,3 @@ class BBBLeNet(nn.Module):
         logits = x
         print('logits', logits)
         return logits, kl
-
-    def load_prior(self, state_dict):
-        d_q = {k: v for k, v in state_dict.items() if "q" in k}
-        for i, layer in enumerate(self.layers):
-            if type(layer) is BBBConv2d:
-                layer.pw = Normal(mu=d_q["layers.{}.qw_mean".format(i)],
-                                  logvar=d_q["layers.{}.qw_logvar".format(i)])
-                #layer.pb = Normal(mu=(d_q["layers.{}.qb_mean".format(i)]), logvar=(d_q["layers.{}.qb_logvar".format(i)]))
-
-            elif type(layer) is BBBLinearFactorial:
-                layer.pw = Normal(mu=(d_q["layers.{}.qw_mean".format(i)]),
-                                  logvar=(d_q["layers.{}.qw_logvar".format(i)]))
-
-                #layer.pb = Normal(mu=(d_q["layers.{}.qb_mean".format(i)]), logvar=(d_q["layers.{}.qb_logvar".format(i)]))
