@@ -39,16 +39,19 @@ class BBBAlexNet(nn.Module):
         )
         # CLASSIFIER
         self.flatten = FlattenLayer(256 * 6 * 6)
+
         self.drop1 = nn.Dropout()
         self.fc1 = BBBLinearFactorial(256 * 6 * 6, 4096)
-        self.relu1 = nn.Softplus()
+        self.soft1 = nn.Softplus()
+
         self.drop2 = nn.Dropout()
         self.fc2 = BBBLinearFactorial(4096, 4096)
-        self.relu2 = nn.Softplus()
+        self.soft2 = nn.Softplus()
+
         self.fc3 = BBBLinearFactorial(4096, outputs)
 
         layers = [self.conv1, self.conv1a, self.conv2, self.conv2a, self.conv3, self.conv3a, self.conv4, self.conv4a,
-                  self.conv5, self.conv5a, self.flatten, self.drop1, self.fc1, self.relu1, self.drop2, self.fc2, self.relu2, self.fc3]
+                  self.conv5, self.conv5a, self.flatten, self.drop1, self.fc1, self.soft1, self.drop2, self.fc2, self.soft2, self.fc3]
 
         self.layers = nn.ModuleList(layers)
 
@@ -88,24 +91,24 @@ class BBBLeNet(nn.Module):
     def __init__(self, outputs, inputs):
         super(BBBLeNet, self).__init__()
         self.conv1 = BBBConv2d(inputs, 6, 5, stride=1)
-        self.relu1 = nn.Softplus()
+        self.soft1 = nn.Softplus()
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.conv2 = BBBConv2d(6, 16, 5, stride=1)
-        self.relu2 = nn.Softplus()
+        self.soft2 = nn.Softplus()
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.flatten = FlattenLayer(5 * 5 * 16)
         self.fc1 = BBBLinearFactorial(5 * 5 * 16, 120)
-        self.relu3 = nn.Softplus()
+        self.soft3 = nn.Softplus()
 
         self.fc2 = BBBLinearFactorial(120, 84)
-        self.relu4 = nn.Softplus()
+        self.soft4 = nn.Softplus()
 
         self.fc3 = BBBLinearFactorial(84, outputs)
 
-        layers = [self.conv1, self.relu1, self.pool1, self.conv2, self.relu2, self.pool2,
-                  self.flatten, self.fc1, self.relu3, self.fc2, self.relu4, self.fc3]
+        layers = [self.conv1, self.soft1, self.pool1, self.conv2, self.soft2, self.pool2,
+                  self.flatten, self.fc1, self.soft3, self.fc2, self.soft4, self.fc3]
 
         self.layers = nn.ModuleList(layers)
 
@@ -130,35 +133,35 @@ class BBBLeNetexp(nn.Module):
     def __init__(self, outputs, inputs):
         super(BBBLeNetexp, self).__init__()
         self.conv1 = BBBConv2d(inputs, 6, 5, stride=1)
-        self.relu1 = nn.Softplus()
+        self.soft1 = nn.Softplus()
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.conv2 = BBBConv2d(6, 16, 5, stride=1)
-        self.relu2 = nn.Softplus()
+        self.soft2 = nn.Softplus()
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.conv3 = BBBConv2d(16, 16, 5, stride=1, padding=1)
-        self.relu3 = nn.Softplus()
+        self.soft3 = nn.Softplus()
 
         self.flatten = FlattenLayer(8 * 8 * 16)
         self.fc1 = BBBLinearFactorial(8 * 8 * 16, 120)
-        self.relu5 = nn.Softplus()
+        self.soft5 = nn.Softplus()
 
         self.fc2 = BBBLinearFactorial(120, 240)
-        self.relu6 = nn.Softplus()
+        self.soft6 = nn.Softplus()
 
         self.fc3 = BBBLinearFactorial(240, 120)
-        self.relu7 = nn.Softplus()
+        self.soft7 = nn.Softplus()
 
         self.fc4 = BBBLinearFactorial(120, 84)
-        self.relu8 = nn.Softplus()
+        self.soft8 = nn.Softplus()
 
         self.fc5 = BBBLinearFactorial(84, outputs)
 
-        layers = [self.conv1, self.relu1, self.pool1, self.conv2, self.relu2,
-                  self.conv3, self.relu3, self.flatten, self.fc1, self.relu5,
-                  self.fc2, self.relu6, self.fc3, self.relu7,
-                  self.fc4, self.relu8, self.fc5]
+        layers = [self.conv1, self.soft1, self.pool1, self.conv2, self.soft2,
+                  self.conv3, self.soft3, self.flatten, self.fc1, self.soft5,
+                  self.fc2, self.soft6, self.fc3, self.soft7,
+                  self.fc4, self.soft8, self.fc5]
 
         self.layers = nn.ModuleList(layers)
 

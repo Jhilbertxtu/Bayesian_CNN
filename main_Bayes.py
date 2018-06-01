@@ -24,7 +24,7 @@ dataset = 'CIFAR-100'  # MNIST or CIFAR-100
 num_epochs = 200
 p_logvar_init = 0
 q_logvar_init = -10
-lr = 0.005
+lr = 0.0005
 weight_decay = 0.0005
 
 # dimensions of input and output
