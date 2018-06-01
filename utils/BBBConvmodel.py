@@ -132,14 +132,14 @@ class BBBLeNet(nn.Module):
 class BBBLeNetexp(nn.Module):
     def __init__(self, outputs, inputs):
         super(BBBLeNetexp, self).__init__()
-        self.conv1 = BBBConv2d(inputs, 6, 5, stride=1)
+        self.conv1 = BBBConv2d(inputs, 16, 5, stride=1)
         self.soft1 = nn.Softplus()
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        self.conv2 = BBBConv2d(6, 16, 5, stride=1)
+        self.conv2 = BBBConv2d(16, 32, 5, stride=1)
         self.soft2 = nn.Softplus()
 
-        self.conv3 = BBBConv2d(16, 16, 5, stride=1, padding=1)
+        self.conv3 = BBBConv2d(32, 16, 5, stride=1, padding=1)
         self.soft3 = nn.Softplus()
 
         self.flatten = FlattenLayer(8 * 8 * 16)
