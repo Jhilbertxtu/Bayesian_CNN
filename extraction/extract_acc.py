@@ -36,7 +36,7 @@ plt.ylabel("Accuracy")
 x_ticks = range(len(valid))
 plt.xticks(x_ticks[19::20], map(lambda x: x+1, x_ticks[19::20]))
 
-f.suptitle("Accuracy after training for 100 epochs")
+f.suptitle("Accuracy after training for 200 epochs")
 plt.legend()
 
 plt.savefig("results_{}.png".format(task))

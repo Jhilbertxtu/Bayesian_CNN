@@ -124,3 +124,56 @@ class BBBLeNet(nn.Module):
         logits = x
         print('logits', logits)
         return logits, kl
+
+
+class BBBLeNetexp(nn.Module):
+    def __init__(self, outputs, inputs):
+        super(BBBLeNetexp, self).__init__()
+        self.conv1 = BBBConv2d(inputs, 6, 5, stride=1)
+        self.relu1 = nn.Softplus()
+        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.conv2 = BBBConv2d(6, 16, 5, stride=1)
+        self.relu2 = nn.Softplus()
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        self.conv3 = BBBConv2d(16, 16, 5, stride=1, padding=1)
+        self.relu3 = nn.Softplus()
+
+        self.flatten = FlattenLayer(8 * 8 * 16)
+        self.fc1 = BBBLinearFactorial(8 * 8 * 16, 120)
+        self.relu5 = nn.Softplus()
+
+        self.fc2 = BBBLinearFactorial(120, 240)
+        self.relu6 = nn.Softplus()
+
+        self.fc3 = BBBLinearFactorial(240, 120)
+        self.relu7 = nn.Softplus()
+
+        self.fc4 = BBBLinearFactorial(120, 84)
+        self.relu8 = nn.Softplus()
+
+        self.fc5 = BBBLinearFactorial(84, outputs)
+
+        layers = [self.conv1, self.relu1, self.pool1, self.conv2, self.relu2,
+                  self.conv3, self.relu3, self.flatten, self.fc1, self.relu5,
+                  self.fc2, self.relu6, self.fc3, self.relu7,
+                  self.fc4, self.relu8, self.fc5]
+
+        self.layers = nn.ModuleList(layers)
+
+    def probforward(self, x):
+        kl = 0
+        for layer in self.layers:
+            if hasattr(layer, 'convprobforward') and callable(layer.convprobforward):
+                x, _kl, = layer.convprobforward(x)
+                kl += _kl
+
+            elif hasattr(layer, 'fcprobforward') and callable(layer.fcprobforward):
+                x, _kl, = layer.fcprobforward(x)
+                kl += _kl
+            else:
+                x = layer(x)
+        logits = x
+        print('logits', logits)
+        return logits, kl

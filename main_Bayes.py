@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 import torch.utils.data as data
 import torchvision.datasets as dsets
 import os
-from utils.BBBConvmodel import BBBAlexNet, BBBLeNet
+from utils.BBBConvmodel import BBBAlexNet, BBBLeNet, BBBLeNetexp
 from utils.BBBlayers import GaussianVariationalInference
 
 cuda = torch.cuda.is_available()
@@ -19,9 +19,9 @@ is_training = True  # set to "False" to only run validation
 num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
-net = BBBLeNet   # LeNet or AlexNet
-dataset = 'MNIST'  # MNIST or CIFAR-100
-num_epochs = 100
+net = BBBLeNetexp   # LeNet or AlexNet
+dataset = 'CIFAR-100'  # MNIST or CIFAR-100
+num_epochs = 200
 p_logvar_init = 0
 q_logvar_init = -10
 lr = 0.005
@@ -35,7 +35,7 @@ elif dataset is 'CIFAR-100':    # train with CIFAR-100
     outputs = 100
     inputs = 3
 
-if net is BBBLeNet:
+if net is BBBLeNet or BBBLeNetexp:
     resize = 32
 elif net is BBBAlexNet:
     resize = 227
@@ -117,7 +117,7 @@ def run_epoch(loader, epoch, is_training=False):
         if net is BBBAlexNet:
             x = images.view(-1, inputs, 227, 227).repeat(num_samples, 1, 1, 1)
             y = labels.repeat(num_samples)
-        elif net is BBBLeNet:
+        elif net is BBBLeNet or BBBLeNetexp:
             x = images.view(-1, inputs, 32, 32).repeat(num_samples, 1, 1, 1)
             y = labels.repeat(num_samples)
 
