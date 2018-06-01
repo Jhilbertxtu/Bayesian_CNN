@@ -138,19 +138,18 @@ class BBBLeNetexp(nn.Module):
 
         self.conv2 = BBBConv2d(6, 16, 5, stride=1)
         self.soft2 = nn.Softplus()
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.conv3 = BBBConv2d(16, 16, 5, stride=1, padding=1)
         self.soft3 = nn.Softplus()
 
         self.flatten = FlattenLayer(8 * 8 * 16)
-        self.fc1 = BBBLinearFactorial(8 * 8 * 16, 120)
+        self.fc1 = BBBLinearFactorial(8 * 8 * 16, 240)
         self.soft5 = nn.Softplus()
 
-        self.fc2 = BBBLinearFactorial(120, 240)
+        self.fc2 = BBBLinearFactorial(240, 480)
         self.soft6 = nn.Softplus()
 
-        self.fc3 = BBBLinearFactorial(240, 120)
+        self.fc3 = BBBLinearFactorial(480, 120)
         self.soft7 = nn.Softplus()
 
         self.fc4 = BBBLinearFactorial(120, 84)
