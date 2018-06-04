@@ -1,5 +1,4 @@
 import torch.nn as nn
-from .BBBdistributions import Normal
 from .BBBlayers import BBBConv2d, BBBLinearFactorial, FlattenLayer
 
 
@@ -11,29 +10,29 @@ class BBBAlexNet(nn.Module):
         # FEATURES
         self.conv1 = BBBConv2d(inputs, 64, kernel_size=11, stride=4, padding=2)
         self.conv1a = nn.Sequential(
-            nn.Softplus(),
+            nn.ReLU(inplace=True),
             # nn.BatchNorm2d(64),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
         self.conv2 = BBBConv2d(64, 192, kernel_size=5, padding=2)
         self.conv2a = nn.Sequential(
-            nn.Softplus(),
+            nn.ReLU(inplace=True),
             # nn.BatchNorm2d(192),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
         self.conv3 = BBBConv2d(192, 384, kernel_size=3, padding=1)
         self.conv3a = nn.Sequential(
-            nn.Softplus(),
+            nn.ReLU(inplace=True),
             # nn.BatchNorm2d(384),
         )
         self.conv4 = BBBConv2d(384, 256, kernel_size=3, padding=1)
         self.conv4a = nn.Sequential(
-            nn.Softplus(),
+            nn.ReLU(inplace=True),
             # nn.BatchNorm2d(256),
         )
         self.conv5 = BBBConv2d(256, 256, kernel_size=3, padding=1)
         self.conv5a = nn.Sequential(
-            nn.Softplus(),
+            nn.ReLU(inplace=True),
             # nn.BatchNorm2d(256),
             nn.MaxPool2d(kernel_size=3, stride=2)
         )
@@ -42,11 +41,11 @@ class BBBAlexNet(nn.Module):
 
         self.drop1 = nn.Dropout()
         self.fc1 = BBBLinearFactorial(256 * 6 * 6, 4096)
-        self.soft1 = nn.Softplus()
+        self.soft1 = nn.ReLU(inplace=True)
 
         self.drop2 = nn.Dropout()
         self.fc2 = BBBLinearFactorial(4096, 4096)
-        self.soft2 = nn.Softplus()
+        self.soft2 = nn.ReLU(inplace=True)
 
         self.fc3 = BBBLinearFactorial(4096, outputs)
 
@@ -61,30 +60,17 @@ class BBBAlexNet(nn.Module):
             if hasattr(layer, 'convprobforward') and callable(layer.convprobforward):
                 x, _kl, = layer.convprobforward(x)
                 kl += _kl
+                print('conv', x.size())
 
             elif hasattr(layer, 'fcprobforward') and callable(layer.fcprobforward):
                 x, _kl, = layer.fcprobforward(x)
                 kl += _kl
             else:
                 x = layer(x)
+                print('x', x.size())
         logits = x
         print('logits', logits)
         return logits, kl
-
-    def load_prior(self, state_dict):
-        d_q = {k: v for k, v in state_dict.items() if "q" in k}
-        for i, layer in enumerate(self.layers):
-            if type(layer) is BBBConv2d:
-                layer.pw = Normal(mu=d_q["layers.{}.qw_mean".format(i)],
-                                  logvar=d_q["layers.{}.qw_logvar".format(i)])
-                # layer.pb = Normal(mu=d_q["layers.{}.qb_mean".format(i)], logvar=d_q["layers.{}.qb_logvar".format(i)])
-
-            elif type(layer) is BBBLinearFactorial:
-                layer.pw = Normal(mu=(d_q["layers.{}.qw_mean".format(i)]),
-                                  logvar=(d_q["layers.{}.qw_logvar".format(i)]))
-
-                layer.pb = Normal(mu=(d_q["layers.{}.qb_mean".format(i)]),
-                                  logvar=(d_q["layers.{}.qb_logvar".format(i)]))
 
 
 class BBBLeNet(nn.Module):
@@ -132,30 +118,30 @@ class BBBLeNet(nn.Module):
 class BBBLeNetexp(nn.Module):
     def __init__(self, outputs, inputs):
         super(BBBLeNetexp, self).__init__()
-        self.conv1 = BBBConv2d(inputs, 16, 5, stride=1)
+        self.conv1 = BBBConv2d(inputs, 64, 5, stride=1)
         self.soft1 = nn.Softplus()
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        self.conv2 = BBBConv2d(16, 32, 5, stride=1)
+        self.conv2 = BBBConv2d(64, 192, 5, stride=1)
         self.soft2 = nn.Softplus()
 
-        self.conv3 = BBBConv2d(32, 16, 5, stride=1, padding=1)
+        self.conv3 = BBBConv2d(192, 64, 5, stride=1, padding=1)
         self.soft3 = nn.Softplus()
 
-        self.flatten = FlattenLayer(8 * 8 * 16)
-        self.fc1 = BBBLinearFactorial(8 * 8 * 16, 240)
+        self.flatten = FlattenLayer(8 * 8 * 64)
+        self.fc1 = BBBLinearFactorial(8 * 8 * 64, 512)
         self.soft5 = nn.Softplus()
 
-        self.fc2 = BBBLinearFactorial(240, 480)
+        self.fc2 = BBBLinearFactorial(512, 1024)
         self.soft6 = nn.Softplus()
 
-        self.fc3 = BBBLinearFactorial(480, 120)
+        self.fc3 = BBBLinearFactorial(1024, 1024)
         self.soft7 = nn.Softplus()
 
-        self.fc4 = BBBLinearFactorial(120, 84)
+        self.fc4 = BBBLinearFactorial(1024, 512)
         self.soft8 = nn.Softplus()
 
-        self.fc5 = BBBLinearFactorial(84, outputs)
+        self.fc5 = BBBLinearFactorial(512, outputs)
 
         layers = [self.conv1, self.soft1, self.pool1, self.conv2, self.soft2,
                   self.conv3, self.soft3, self.flatten, self.fc1, self.soft5,

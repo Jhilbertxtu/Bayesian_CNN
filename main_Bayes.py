@@ -19,7 +19,7 @@ is_training = True  # set to "False" to only run validation
 num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
-net = BBBAlexNet   # LeNet or AlexNet
+net = BBBLeNetexp   # LeNet or AlexNet
 dataset = 'CIFAR-100'  # MNIST or CIFAR-100
 num_epochs = 200
 p_logvar_init = 0
@@ -114,12 +114,8 @@ def run_epoch(loader, epoch, is_training=False):
 
     for i, (images, labels) in enumerate(loader):
         # Repeat samples (Casper's trick)
-        if net is BBBAlexNet:
-            x = images.view(-1, inputs, 227, 227).repeat(num_samples, 1, 1, 1)
-            y = labels.repeat(num_samples)
-        elif net is BBBLeNet or BBBLeNetexp:
-            x = images.view(-1, inputs, 32, 32).repeat(num_samples, 1, 1, 1)
-            y = labels.repeat(num_samples)
+        x = images.view(-1, inputs, resize, resize).repeat(num_samples, 1, 1, 1)
+        y = labels.repeat(num_samples)
 
         if cuda:
             x = x.cuda()
