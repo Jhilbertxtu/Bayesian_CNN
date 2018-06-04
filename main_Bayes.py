@@ -20,17 +20,20 @@ num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
 net = BBBLeNetexp   # LeNet or AlexNet
-dataset = 'CIFAR-100'  # MNIST or CIFAR-100
+dataset = 'CIFAR-100'  # MNIST, CIFAR-10 or CIFAR-100
 num_epochs = 200
 p_logvar_init = 0
 q_logvar_init = -10
-lr = 0.00001
+lr = 0.0001
 weight_decay = 0.0005
 
 # dimensions of input and output
 if dataset is 'MNIST':    # train with MNIST
     outputs = 10
     inputs = 1
+elif dataset is 'CIFAR-10':  # train with CIFAR-10
+    outputs = 10
+    inputs = 3
 elif dataset is 'CIFAR-100':    # train with CIFAR-100
     outputs = 100
     inputs = 3
