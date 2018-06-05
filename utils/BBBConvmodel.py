@@ -129,24 +129,24 @@ class BBBLeNetexp(nn.Module):
         self.soft3 = nn.Softplus()
 
         self.flatten = FlattenLayer(8 * 8 * 64)
+        self.drop1 = nn.Dropout()
         self.fc1 = BBBLinearFactorial(8 * 8 * 64, 512)
         self.soft5 = nn.Softplus()
 
+        self.drop2 = nn.Dropout()
         self.fc2 = BBBLinearFactorial(512, 1024)
         self.soft6 = nn.Softplus()
 
-        self.fc3 = BBBLinearFactorial(1024, 1024)
+        self.drop3 = nn.Dropout()
+        self.fc3 = BBBLinearFactorial(1024, 512)
         self.soft7 = nn.Softplus()
 
-        self.fc4 = BBBLinearFactorial(1024, 512)
-        self.soft8 = nn.Softplus()
-
-        self.fc5 = BBBLinearFactorial(512, outputs)
+        self.fc4 = BBBLinearFactorial(512, outputs)
 
         layers = [self.conv1, self.soft1, self.pool1, self.conv2, self.soft2,
-                  self.conv3, self.soft3, self.flatten, self.fc1, self.soft5,
-                  self.fc2, self.soft6, self.fc3, self.soft7,
-                  self.fc4, self.soft8, self.fc5]
+                  self.conv3, self.soft3, self.flatten, self.drop1, self.fc1, self.soft5,
+                  self.drop2, self.fc2, self.soft6, self.drop3, self.fc3, self.soft7,
+                  self.fc4]
 
         self.layers = nn.ModuleList(layers)
 

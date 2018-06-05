@@ -14,7 +14,6 @@ cuda = torch.cuda.is_available()
 '''
 HYPERPARAMETERS
 '''
-save_model = True
 is_training = True  # set to "False" to only run validation
 num_samples = 10  # because of Casper's trick
 batch_size = 32
