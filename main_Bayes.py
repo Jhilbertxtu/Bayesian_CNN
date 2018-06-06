@@ -18,9 +18,9 @@ is_training = True  # set to "False" to only run validation
 num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
-net = BBBLeNetexp   # LeNet or AlexNet
-dataset = 'CIFAR-100'  # MNIST, CIFAR-10 or CIFAR-100
-num_epochs = 200
+net = BBBLeNet   # LeNet or AlexNet
+dataset = 'CIFAR-10'  # MNIST, CIFAR-10 or CIFAR-100
+num_epochs = 100
 p_logvar_init = 0
 q_logvar_init = -10
 lr = 0.0001
@@ -57,6 +57,12 @@ elif dataset is 'CIFAR-100':
                                     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
     train_dataset = dsets.CIFAR100(root="data", download=True, transform=transform)
     val_dataset = dsets.CIFAR100(root='data', download=True, train=False, transform=transform)
+
+elif dataset is 'CIFAR-10':
+    transform = transforms.Compose([transforms.Resize((resize, resize)), transforms.ToTensor(),
+                                    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+    train_dataset = dsets.CIFAR10(root="data", download=True, transform=transform)
+    val_dataset = dsets.CIFAR10(root='data', download=True, train=False, transform=transform)
 
 '''
 MAKING DATASET ITERABLE
