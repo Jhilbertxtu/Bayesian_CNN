@@ -115,38 +115,33 @@ class BBBLeNet(nn.Module):
         return logits, kl
 
 
-class BBBLeNetexp(nn.Module):
+class BBB3Conv3FC(nn.Module):
     def __init__(self, outputs, inputs):
-        super(BBBLeNetexp, self).__init__()
-        self.conv1 = BBBConv2d(inputs, 64, 5, stride=1)
+        super(BBB3Conv3FC, self).__init__()
+        self.conv1 = BBBConv2d(inputs, 32, 5, stride=1, padding=2)
         self.soft1 = nn.Softplus()
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2)
 
-        self.conv2 = BBBConv2d(64, 192, 5, stride=1)
+        self.conv2 = BBBConv2d(32, 64, 5, stride=1, padding=2)
         self.soft2 = nn.Softplus()
+        self.pool2 = nn.MaxPool2d(kernel_size=3, stride=2)
 
-        self.conv3 = BBBConv2d(192, 64, 5, stride=1, padding=1)
+        self.conv3 = BBBConv2d(64, 128, 5, stride=1, padding=1)
         self.soft3 = nn.Softplus()
+        self.pool3 = nn.MaxPool2d(kernel_size=3, stride=2)
 
-        self.flatten = FlattenLayer(8 * 8 * 64)
-        self.drop1 = nn.Dropout()
-        self.fc1 = BBBLinearFactorial(8 * 8 * 64, 512)
+        self.flatten = FlattenLayer(2 * 2 * 128)
+        self.fc1 = BBBLinearFactorial(2 * 2 * 128, 1000)
         self.soft5 = nn.Softplus()
 
-        self.drop2 = nn.Dropout()
-        self.fc2 = BBBLinearFactorial(512, 1024)
+        self.fc2 = BBBLinearFactorial(1000, 1000)
         self.soft6 = nn.Softplus()
 
-        self.drop3 = nn.Dropout()
-        self.fc3 = BBBLinearFactorial(1024, 512)
-        self.soft7 = nn.Softplus()
+        self.fc3 = BBBLinearFactorial(1000, outputs)
 
-        self.fc4 = BBBLinearFactorial(512, outputs)
-
-        layers = [self.conv1, self.soft1, self.pool1, self.conv2, self.soft2,
-                  self.conv3, self.soft3, self.flatten, self.drop1, self.fc1, self.soft5,
-                  self.drop2, self.fc2, self.soft6, self.drop3, self.fc3, self.soft7,
-                  self.fc4]
+        layers = [self.conv1, self.soft1, self.pool1, self.conv2, self.soft2, self.pool2,
+                  self.conv3, self.soft3, self.pool3, self.flatten, self.fc1, self.soft5,
+                  self.fc2, self.soft6, self.fc3]
 
         self.layers = nn.ModuleList(layers)
 
