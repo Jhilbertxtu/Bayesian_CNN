@@ -187,7 +187,7 @@ for epoch in range(num_epochs):
 SAVE PARAMETERS
 '''
 if is_training:
-    weightsfile = os.path.join("/results/weights_{}.pkl".format(task))
+    weightsfile = os.path.join("weights_1.pkl")
     with open(weightsfile, "wb") as wf:
         pickle.dump(model.state_dict(), wf)
 
