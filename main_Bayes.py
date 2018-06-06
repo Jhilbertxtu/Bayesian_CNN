@@ -18,12 +18,12 @@ is_training = True  # set to "False" to only run validation
 num_samples = 10  # because of Casper's trick
 batch_size = 32
 beta_type = "Blundell"
-net = BBB3Conv3FC   # LeNet or AlexNet
-dataset = 'CIFAR-10'  # MNIST, CIFAR-10 or CIFAR-100
+net = BBBLeNet   # LeNet or AlexNet
+dataset = 'MNIST'  # MNIST, CIFAR-10 or CIFAR-100
 num_epochs = 100
 p_logvar_init = 0
 q_logvar_init = -10
-lr = 0.0001
+lr = 0.00001
 weight_decay = 0.0005
 
 # dimensions of input and output
