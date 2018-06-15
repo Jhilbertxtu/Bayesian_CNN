@@ -9,3 +9,8 @@ Implementation of [Bayes by Backprop](https://arxiv.org/abs/1505.05424) in a con
 ### Fully Bayesian perspective of an entire CNN 
 
 ![Distributions must be over weights in convolutional layers and weights in fully-connected layers.](figures/CNNwithdist_git.png)
+
+### Results 
+#### Results on MNIST and CIFAR-10 with LeNet-5 and 3Conv3FC, respectively
+
+![Results on MNIST and CIFAR-10 with LeNet-5 and 3Conv3FC, respectively](figures/results_CNN.png)
